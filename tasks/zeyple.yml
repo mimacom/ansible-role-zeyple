@@ -47,11 +47,23 @@
     - https://raw.githubusercontent.com/infertux/zeyple/v{{ zeyple_version }}/selinux/zeyple.te
   register: application
 
+- name: Check if SELinux module is already installed
+  shell: "semodule -l | egrep '^zeyple'"
+  ignore_errors: true
+  changed_when: false
+  register: semodule
+
+- name: Remove SELinux module
+  shell: "semodule -vr zeyple"
+  when:
+    - application.changed
+    - semodule.rc == 0
+
 - name: Install SELinux module for application
-  shell: "checkmodule -Mmo zeyple.mod zeyple.te && semodule_package -m zeyple.mod -o zeyple.pp && (semodule -vr zeyple || true) && semodule -vi zeyple.pp"
+  shell: "checkmodule -Mmo zeyple.mod zeyple.te && semodule_package -m zeyple.mod -o zeyple.pp && semodule -vi zeyple.pp"
   args:
     chdir: /opt/zeyple/
-  when: application.changed
+  when: application.changed or semodule.rc == 1
 
 - name: Configure application
   get_url:
