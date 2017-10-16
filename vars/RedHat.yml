@@ -4,6 +4,6 @@ zeyple_packages:
   - gpgme
   - git
 
-  # packages for managing SELinux
+selinux_helper_tools:
   - checkpolicy
   - policycoreutils-python

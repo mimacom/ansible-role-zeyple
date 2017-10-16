@@ -47,15 +47,24 @@
     - https://raw.githubusercontent.com/infertux/zeyple/v{{ zeyple_version }}/selinux/zeyple.te
   register: application
 
+- name: Ensure SELinux helper tools are installed
+  package:
+    name: "{{ item }}"
+    state: installed
+  with_items: "{{ selinux_helper_tools }}"
+  when: ansible_selinux.status == "enabled"
+
 - name: Check if SELinux module is already installed
   shell: "semodule -l | egrep '^zeyple'"
   ignore_errors: true
   changed_when: false
   register: semodule
+  when: ansible_selinux.status == "enabled"
 
 - name: Remove SELinux module
   shell: "semodule -vr zeyple"
   when:
+    - ansible_selinux.status == "enabled"
     - application.changed
     - semodule.rc == 0
 
@@ -67,8 +76,9 @@
     - "checkmodule -Mmo zeyple.mod zeyple.te"
     - "semodule_package -m zeyple.mod -o zeyple.pp"
     - "semodule -vi zeyple.pp"
-    
-  when: application.changed or semodule.rc == 1
+  when: 
+    - ansible_selinux.status == "enabled"
+    - application.changed or semodule.rc == 1
 
 - name: Configure application
   get_url:
