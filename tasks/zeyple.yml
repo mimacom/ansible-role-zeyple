@@ -1,0 +1,27 @@
+---
+- name: Ensure dependencies are installed
+  package:
+    name: "{{ item }}"
+    state: installed
+  with_items: "{{ zeyple_packages }}"
+
+- name: Ensure zeyple user exists
+  user:
+    name: zeyple
+    shell: /bin/false
+    home: /var/lib/zeyple/
+
+- name: Ensure zeyple bin folder exists
+  file:
+    path: /usr/local/bin/zeyple
+    state: directory
+    owner: zeyple
+    group: zeyple
+
+- name: Download and extract zeyple scripts
+  unarchive:
+    src: https://github.com/infertux/zeyple/archive/v{{ zeyple_version }}.tar.gz
+    dest: /usr/local/bin/zeyple
+    remote_src: yes
+    owner: zeyple
+    group: zeyple
