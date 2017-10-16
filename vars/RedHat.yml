@@ -3,3 +3,7 @@ zeyple_packages:
   - gnupg2
   - gpgme
   - git
+
+  # packages for managing SELinux
+  - checkpolicy
+  - policycoreutils-python

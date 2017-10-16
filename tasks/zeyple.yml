@@ -31,11 +31,21 @@
 
 - name: Download script
   get_url:
-    url: https://raw.githubusercontent.com/infertux/zeyple/v{{ zeyple_version }}/zeyple/zeyple.py
+    url: "{{ item }}"
     dest: /opt/zeyple/
     mode: 0744
     owner: zeyple
     group: zeyple
+  with_items:
+    - https://raw.githubusercontent.com/infertux/zeyple/v{{ zeyple_version }}/zeyple/zeyple.py
+    - https://raw.githubusercontent.com/infertux/zeyple/v{{ zeyple_version }}/selinux/zeyple.te
+  register: application
+
+- name: Install SELinux module for application
+  shell: "checkmodule -Mmo zeyple.mod zeyple.te && semodule_package -m zeyple.mod -o zeyple.pp && (semodule -vr zeyple || true) && semodule -vi zeyple.pp"
+  args:
+    chdir: /opt/zeyple/
+  when: application.changed
 
 - name: Configure application
   get_url:
