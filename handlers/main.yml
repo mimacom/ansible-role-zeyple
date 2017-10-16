@@ -1,2 +1,5 @@
 ---
-# handlers file for zeyple
+- name: restart postfix
+  systemd:
+    name: postfix
+    state: restarted

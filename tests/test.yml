@@ -1,5 +1,8 @@
 ---
-- hosts: localhost
+- hosts:
+    - all
+    - localhost
+  become: yes
   remote_user: root
   roles:
     - role_under_test

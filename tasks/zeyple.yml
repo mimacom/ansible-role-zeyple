@@ -5,23 +5,68 @@
     state: installed
   with_items: "{{ zeyple_packages }}"
 
-- name: Ensure zeyple user exists
+- name: Ensure application user exists
   user:
     name: zeyple
     shell: /bin/false
     home: /var/lib/zeyple/
 
-- name: Ensure zeyple bin folder exists
+- name: Ensure application files and folders exists
   file:
-    path: /usr/local/bin/zeyple
-    state: directory
+    path: "{{ item.path }}"
+    state: "{{ item.state }}"
+    mode: "{{ item.mode | default('') }}"
+    owner: zeyple
+    group: zeyple
+  with_items:
+    - path: /opt/zeyple
+      state: directory
+      mode: "0755"
+    - path: /var/lib/zeyple/keys
+      state: directory
+      mode: "0700"
+    - path: /var/log/zeyple.log
+      state: touch
+      mode: "0744"
+
+- name: Download script
+  get_url:
+    url: https://raw.githubusercontent.com/infertux/zeyple/v{{ zeyple_version }}/zeyple/zeyple.py
+    dest: /opt/zeyple/
+    mode: 0744
     owner: zeyple
     group: zeyple
 
-- name: Download and extract zeyple scripts
-  unarchive:
-    src: https://github.com/infertux/zeyple/archive/v{{ zeyple_version }}.tar.gz
-    dest: /usr/local/bin/zeyple
-    remote_src: yes
+- name: Configure application
+  get_url:
+    url: https://raw.githubusercontent.com/infertux/zeyple/v{{ zeyple_version }}/zeyple/zeyple.conf.example
+    dest: /etc/zeyple.conf
+    force: no
     owner: zeyple
     group: zeyple
+
+- name: Add zeyple filter to postfix
+  blockinfile:
+    path: /etc/postfix/master.cf
+    marker: "# {mark} ZEYPLE FILTER"
+    block: |
+      zeyple    unix  -       n       n       -       -       pipe
+        user=zeyple argv=/opt/zeyple/zeyple.py ${recipient}
+
+      localhost:10026 inet  n       -       n       -       10      smtpd
+        -o content_filter=
+        -o receive_override_options=no_unknown_recipient_checks,no_header_body_checks,no_milters
+        -o smtpd_helo_restrictions=
+        -o smtpd_client_restrictions=
+        -o smtpd_sender_restrictions=
+        -o smtpd_recipient_restrictions=permit_mynetworks,reject
+        -o mynetworks=127.0.0.0/8
+        -o smtpd_authorized_xforward_hosts=127.0.0.0/8
+  notify: restart postfix
+
+- name: Ensure postfix uses zeyple filter
+  lineinfile:
+    path: /etc/postfix/main.cf
+    regexp: "^content_filter[ \t]*="
+    line: "content_filter = zeyple"
+  notify: restart postfix
