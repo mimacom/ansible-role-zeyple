@@ -52,19 +52,19 @@
     name: "{{ item }}"
     state: installed
   with_items: "{{ selinux_helper_tools }}"
-  when: ansible_selinux.status == "enabled"
+  when: ansible_selinux is defined
 
 - name: Check if SELinux module is already installed
   shell: "semodule -l | egrep '^zeyple'"
   ignore_errors: true
   changed_when: false
   register: semodule
-  when: ansible_selinux.status == "enabled"
+  when: ansible_selinux.status is defined
 
 - name: Remove SELinux module
   shell: "semodule -vr zeyple"
   when:
-    - ansible_selinux.status == "enabled"
+    - ansible_selinux.status is defined
     - application.changed
     - semodule.rc == 0
 
@@ -77,7 +77,7 @@
     - "semodule_package -m zeyple.mod -o zeyple.pp"
     - "semodule -vi zeyple.pp"
   when: 
-    - ansible_selinux.status == "enabled"
+    - ansible_selinux.status is defined
     - application.changed or semodule.rc == 1
 
 - name: Configure application
