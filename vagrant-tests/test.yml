@@ -1,6 +1,0 @@
----
-- hosts: all
-  become: true
-  vars:
-  roles:
-    - mimacom.zeyple
