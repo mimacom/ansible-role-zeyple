@@ -60,9 +60,14 @@
     - semodule.rc == 0
 
 - name: Install SELinux module for application
-  shell: "checkmodule -Mmo zeyple.mod zeyple.te && semodule_package -m zeyple.mod -o zeyple.pp && semodule -vi zeyple.pp"
+  shell: "{{ item }}"
   args:
     chdir: /opt/zeyple/
+  with_items:
+    - "checkmodule -Mmo zeyple.mod zeyple.te"
+    - "semodule_package -m zeyple.mod -o zeyple.pp"
+    - "semodule -vi zeyple.pp"
+    
   when: application.changed or semodule.rc == 1
 
 - name: Configure application
