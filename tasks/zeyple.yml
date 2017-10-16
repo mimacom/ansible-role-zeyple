@@ -11,7 +11,7 @@
     shell: /bin/false
     home: /var/lib/zeyple/
 
-- name: Ensure application files and folders exists
+- name: Ensure application folders exists
   file:
     path: "{{ item.path }}"
     state: "{{ item.state }}"
@@ -25,9 +25,15 @@
     - path: /var/lib/zeyple/keys
       state: directory
       mode: "0700"
-    - path: /var/log/zeyple.log
-      state: touch
-      mode: "0744"
+
+- name: Ensure application log file exists
+  copy:
+    content: ""
+    dest: /var/log/zeyple.log
+    force: no
+    mode: "0744"
+    owner: zeyple
+    group: zeyple
 
 - name: Download script
   get_url:
