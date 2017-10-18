@@ -22,7 +22,7 @@ Otherwise, postfix will be installed using the default configuration.
 ## Role Variables
 
     # Specify zeyple version to install
-    zeyple_version: 1.2.0
+    zeyple_version: 1.2.1
 
 
 ## Dependencies
@@ -35,7 +35,7 @@ None.
       become: yes
       roles:
         - role: mimacom.zeyple
-          zeyple_version: 1.2.0
+          zeyple_version: 1.2.1
 
 ## License
 
